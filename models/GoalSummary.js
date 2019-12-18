@@ -33,16 +33,13 @@ var GoalSummarySchema = new Schema({
     required: false
   },
   Plus: {
-    type: String,
+    type: [String],
     required: false
   },
   Minus: {
-    type: String,
+    type: [String],
     required: false
   },
-  // `note` is an object that stores a Note id
-  // The ref property links the ObjectId to the Note model
-  // This allows us to populate the Article with an associated Note
   note: {
     type: Schema.Types.ObjectId,
     ref: "Note"
@@ -50,7 +47,7 @@ var GoalSummarySchema = new Schema({
 });
 
 // This creates our model from the above schema, using mongoose's model method
-var GoalSummary = mongoose.model("Article", GoalSummarySchema);
+var GoalSummary = mongoose.model("GoalSummary", GoalSummarySchema);
 
 // Export the Article model
 module.exports = GoalSummary;

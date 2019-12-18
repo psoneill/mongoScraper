@@ -1,8 +1,11 @@
 $(document).ready(function () {
   $("#btnScrape").on("click", function () {
-    $.getJSON("/scrape", function () { }).then(() => {
-      //window.location.href = "/";
-    });
+    $.get("/scrape", function (data) {
+      console.log("Done Scraping!");
+      window.location.href = "/";
+    }).then(() => {
+
+    })
   });
 
   $("#btnClear").on("click", function () {
@@ -10,70 +13,88 @@ $(document).ready(function () {
       url: '/clear',
       type: 'DELETE'
     });
-    $("#articles").empty();
+    $("#goalRows").empty();
   });
 
-  function getArticles() {
-    // Grab the articles as a json
-    $.getJSON("/articles", function (data) {
-      // For each one
-      $("#articles").empty();
-      for (var i = 0; i < data.length; i++) {
+  function getGoals() {
+    // Grab the goal summaries as a json
+    $.getJSON("/api/goalSummaries", function (data) {
+      $("#goalRows").empty();
+      for (let i = 0; i < data.length; i++) {
+        let newRow = $("<tr>");
+        let newGoalNum = $('<td scope="row">').text(i + 1);
+        let newGoalScorer = $('<td class="goalScorer">').text(data[i].G);
+        let newGoalAssist1 = $("<td>").text(data[i].A1);
+        let newGoalAssist2 = $("<td>").text(data[i].A2);
+        let newGoalStrength = $("<td>").text(data[i].Strength);
+        let newGoalType = $("<td>").text(data[i].Type);
+        let newGoalPlus = $("<td>").text(data[i].Plus.join(", "));
+        let newGoalMinus = $("<td>").text(data[i].Minus.join(", "));
+        let newGoalTime = $('<td class="goalTime">').text(data[i].Time);
+        let newGoalNoteCell = $("<td data>");
+        let newGoalNote = $('<button class="goalNote btn btn-primary" data-id="' + data[i]._id + '">Add Note</button>')
+        newGoalNoteCell.append(newGoalNote);
+        newRow.append(newGoalNum);
+        newRow.append(newGoalScorer);
+        newRow.append(newGoalAssist1);
+        newRow.append(newGoalAssist2);
+        newRow.append(newGoalStrength);
+        newRow.append(newGoalType);
+        newRow.append(newGoalPlus);
+        newRow.append(newGoalMinus);
+        newRow.append(newGoalTime);
+        newRow.append(newGoalNoteCell);
         // Display the apropos information on the page
-        $("#articles").append("<p data-id='" + data[i]._id + "'>" + data[i].title + "<br />" + data[i].link + "</p>");
+        $("#goalRows").append(newRow);
       }
     });
   }
 
-  getArticles();
+  getGoals();
   // Whenever someone clicks a p tag
-  $(document).on("click", "p", function () {
+  $(document).on("click", ".goalNote", function () {
     // Empty the notes from the note section
     $("#notes").empty();
+    $("#modalNote").modal("toggle");
+    $("#modal-title").text("GOAL: " + $(this).parent().parent().find(".goalScorer").text() + " - " + $(this).parent().parent().find(".goalTime").text());
     // Save the id from the p tag
     var thisId = $(this).attr("data-id");
 
     // Now make an ajax call for the Article
     $.ajax({
       method: "GET",
-      url: "/articles/" + thisId
+      url: "/api/goalSummaries/" + thisId
     })
       // With that done, add the note information to the page
       .then(function (data) {
         console.log(data);
-        // The title of the article
-        $("#notes").append("<h2>" + data.title + "</h2>");
+        $("#notes").append("<h5>").text("Note:");
         // An input to enter a new title
-        $("#notes").append("<input id='titleinput' name='title' >");
-        // A textarea to add a new note body
-        $("#notes").append("<textarea id='bodyinput' name='body'></textarea>");
+        $("#notes").append("<input id='titleinput' class='form-control' type='text' name='title' >");
         // A button to submit a new note, with the id of the article saved to it
-        $("#notes").append("<button data-id='" + data._id + "' id='savenote'>Save Note</button>");
+        $("#notes").append("<button data-id='" + data._id + "' id='savenote' class='btn btn-primary'>Save Note</button>");
 
         // If there's a note in the article
         if (data.note) {
           // Place the title of the note in the title input
           $("#titleinput").val(data.note.title);
-          // Place the body of the note in the body textarea
-          $("#bodyinput").val(data.note.body);
         }
       });
   });
 
   // When you click the savenote button
-  $(document).on("click", "#savenote", function () {
+  $(document).on("click", "#savenote", function (event) {
+    event.preventDefault();
     // Grab the id associated with the article from the submit button
     var thisId = $(this).attr("data-id");
-
+    console.log(thisId);
     // Run a POST request to change the note, using what's entered in the inputs
     $.ajax({
       method: "POST",
-      url: "/articles/" + thisId,
+      url: "/api/goalSummaries/" + thisId,
       data: {
         // Value taken from title input
-        title: $("#titleinput").val(),
-        // Value taken from note textarea
-        body: $("#bodyinput").val()
+        title: $("#titleinput").val()
       }
     })
       // With that done
@@ -81,11 +102,7 @@ $(document).ready(function () {
         // Log the response
         console.log(data);
         // Empty the notes section
-        $("#notes").empty();
+        $("#savenote").addClass("btn-success");
       });
-
-    // Also, remove the values entered in the input and textarea for note entry
-    $("#titleinput").val("");
-    $("#bodyinput").val("");
   });
 });
