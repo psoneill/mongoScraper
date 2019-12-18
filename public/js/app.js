@@ -105,4 +105,14 @@ $(document).ready(function () {
         $("#savenote").addClass("btn-success");
       });
   });
+
+  $("#tbPlayerSearch").on("keyup", event => {
+    $("td").css("background-color", "inherit");
+    if ($("#tbPlayerSearch").val() !== "") {
+      var tdList = $("td").filter(function () {
+        return $(this).text().toLowerCase().indexOf($("#tbPlayerSearch").val().toLowerCase()) > -1;
+      })
+      tdList.css("background-color", "green");
+    }
+  })
 });
